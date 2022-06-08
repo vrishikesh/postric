@@ -10,13 +10,19 @@ import (
 	"time"
 )
 
-type Config struct{}
+type Config struct {
+	DefaultTimeout time.Duration
+}
 
 func main() {
+	app := &Config{
+		DefaultTimeout: 30 * time.Second,
+	}
+
 	// The HTTP Server
 	server := &http.Server{
 		Addr:    "0.0.0.0:8080",
-		Handler: Router(),
+		Handler: app.routes(),
 	}
 
 	// Server run context
