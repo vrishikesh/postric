@@ -1,6 +1,7 @@
 package main
 
 import (
+	"backend/utilities"
 	"context"
 	"fmt"
 	"log"
@@ -22,7 +23,7 @@ func (app *Config) routes() http.Handler {
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.URLFormat)
-	r.Use(middleware.Heartbeat("/ping"))
+	r.Use(middleware.Heartbeat("/health"))
 	r.Use(render.SetContentType(render.ContentTypeJSON))
 
 	// Set a max timeout value on the request context (ctx), that will signal
@@ -32,6 +33,22 @@ func (app *Config) routes() http.Handler {
 
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("."))
+	})
+
+	r.Get("/ping", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("pong"))
+	})
+
+	r.Get("/panic", func(w http.ResponseWriter, r *http.Request) {
+		log.Panic("test")
+	})
+
+	r.Get("/json", func(w http.ResponseWriter, r *http.Request) {
+		render.JSON(w, r, &utilities.JsonResponse{
+			Error:   false,
+			Message: "json",
+			Data:    "Json response",
+		})
 	})
 
 	// API version 1
