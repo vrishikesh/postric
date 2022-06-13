@@ -1,6 +1,7 @@
 package main
 
 import (
+	"backend/handlers/auth"
 	"backend/utilities"
 	"context"
 	"fmt"
@@ -59,7 +60,9 @@ func (app *Config) routes() http.Handler {
 
 func v1Router() chi.Router {
 	r := chi.NewRouter()
-	r.Use(apiVersionCtx("v1"))
+	r.Use(setCtx("api.version", "v1"))
+
+	r.Mount("/auth", authRouter())
 
 	// RESTy routes for "articles" resource
 	r.Mount("/articles", articleRouter())
@@ -171,6 +174,18 @@ func adminRouter() chi.Router {
 	return r
 }
 
+func authRouter() chi.Router {
+	r := chi.NewRouter()
+
+	r.Post("/signin", auth.Signin)
+
+	r.Get("/welcome", auth.Welcome)
+
+	r.Get("/refresh", auth.Refresh)
+
+	return r
+}
+
 // paginate is a stub, but very possible to implement middleware logic
 // to handle the request params for handling a paginated request.
 func Paginate(next http.Handler) http.Handler {
@@ -181,10 +196,10 @@ func Paginate(next http.Handler) http.Handler {
 	})
 }
 
-func apiVersionCtx(version string) func(next http.Handler) http.Handler {
+func setCtx(key, val any) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			r = r.WithContext(context.WithValue(r.Context(), "api.version", version))
+			r = r.WithContext(context.WithValue(r.Context(), key, val))
 			next.ServeHTTP(w, r)
 		})
 	}
