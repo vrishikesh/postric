@@ -1,5 +1,5 @@
-BROKER_BINARY=brokerApp
-AUTH_BINARY=authApp
+BROKER_BINARY=broker.app
+AUTH_BINARY=auth.app
 
 ## up: starts all containers in the background without forcing build
 up:
