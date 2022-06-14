@@ -1,7 +1,7 @@
 package main
 
 import (
-	"broker/utilities"
+	"broker/handlers"
 	"context"
 	"fmt"
 	"log"
@@ -11,6 +11,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/cors"
 	"github.com/go-chi/render"
 )
 
@@ -18,6 +19,15 @@ func (app *Config) routes() http.Handler {
 	r := chi.NewRouter()
 
 	// Middleware stack
+	r.Use(cors.Handler(cors.Options{
+		AllowedOrigins:   []string{"https://*", "http://*"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "PATCH"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		ExposedHeaders:   []string{"Link"},
+		AllowCredentials: true,
+		MaxAge:           300,
+	}))
+
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
@@ -29,27 +39,13 @@ func (app *Config) routes() http.Handler {
 	// Set a max timeout value on the request context (ctx), that will signal
 	// through ctx.Done() that the request has timed out and further
 	// processing should be stopped.
-	r.Use(middleware.Timeout(app.DefaultTimeout))
+	r.Use(middleware.Timeout(30 * time.Second))
 
-	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("."))
-	})
+	r.Get("/", handlers.Broker)
 
-	r.Get("/ping", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("pong"))
-	})
+	r.Get("/ping", handlers.Ping)
 
-	r.Get("/panic", func(w http.ResponseWriter, r *http.Request) {
-		log.Panic("test")
-	})
-
-	r.Get("/json", func(w http.ResponseWriter, r *http.Request) {
-		render.JSON(w, r, &utilities.JsonResponse{
-			Error:   false,
-			Message: "json",
-			Data:    "Json response",
-		})
-	})
+	r.Post("/handle", handlers.HandleSubmission)
 
 	// API version 1
 	r.Mount("/v1", v1Router())
