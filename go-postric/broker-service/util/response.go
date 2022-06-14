@@ -23,22 +23,26 @@ func (e *ErrResponse) Render(w http.ResponseWriter, r *http.Request) error {
 func ErrInvalidRequest(err error) render.Renderer {
 	return &ErrResponse{
 		Err:            err,
-		HTTPStatusCode: 400,
+		HTTPStatusCode: http.StatusBadRequest,
 		StatusText:     "Invalid request",
 		ErrorText:      err.Error(),
 	}
 }
 
-// func ErrRender(err error) render.Renderer {
-// 	return &ErrResponse{
-// 		Err:            err,
-// 		HTTPStatusCode: 422,
-// 		StatusText:     "Error rendering response",
-// 		ErrorText:      err.Error(),
-// 	}
-// }
+func ErrRender(err error) render.Renderer {
+	return &ErrResponse{
+		Err:            err,
+		HTTPStatusCode: http.StatusUnprocessableEntity,
+		StatusText:     "Error rendering response",
+		ErrorText:      err.Error(),
+	}
+}
 
-// var ErrNotFound = &ErrResponse{
-// 	HTTPStatusCode: 404,
-// 	StatusText:     "Resource not found",
-// }
+func ErrNotFound(err error) render.Renderer {
+	return &ErrResponse{
+		Err:            err,
+		HTTPStatusCode: http.StatusNotFound,
+		StatusText:     "Resource not found",
+		ErrorText:      err.Error(),
+	}
+}
