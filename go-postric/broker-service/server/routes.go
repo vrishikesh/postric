@@ -1,8 +1,7 @@
 package main
 
 import (
-	"backend/broker-service/handlers/auth"
-	"backend/broker-service/utilities"
+	"broker/utilities"
 	"context"
 	"fmt"
 	"log"
@@ -61,8 +60,6 @@ func (app *Config) routes() http.Handler {
 func v1Router() chi.Router {
 	r := chi.NewRouter()
 	r.Use(setCtx("api.version", "v1"))
-
-	r.Mount("/auth", authRouter())
 
 	// RESTy routes for "articles" resource
 	r.Mount("/articles", articleRouter())
@@ -171,18 +168,6 @@ func adminRouter() chi.Router {
 	r.Get("/users/{userId}", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(fmt.Sprintf("admin: view user id %v", chi.URLParam(r, "userId"))))
 	})
-	return r
-}
-
-func authRouter() chi.Router {
-	r := chi.NewRouter()
-
-	r.Post("/signin", auth.Signin)
-
-	r.Get("/welcome", auth.Welcome)
-
-	r.Get("/refresh", auth.Refresh)
-
 	return r
 }
 
