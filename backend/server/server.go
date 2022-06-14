@@ -21,7 +21,7 @@ func main() {
 
 	// The HTTP Server
 	server := &http.Server{
-		Addr:    "0.0.0.0:8080",
+		Addr:    "0.0.0.0:80",
 		Handler: app.routes(),
 	}
 
