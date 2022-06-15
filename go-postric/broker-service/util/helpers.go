@@ -1,31 +1,5 @@
 package util
 
-import "net/http"
-
-type JsonResponse struct {
-	Error   bool   `json:"error"`
-	Message string `json:"message"`
-	Data    any    `json:"data,omitempty"`
-}
-
-type AuthPayload struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
-}
-
-type RequestPayload struct {
-	Action string      `json:"action"`
-	Auth   AuthPayload `json:"auth,omitempty"`
-}
-
-// func (p *RequestPayload) Render(w http.ResponseWriter, r *http.Request) error {
-// 	return nil
-// }
-
-func (p *RequestPayload) Bind(r *http.Request) error {
-	return nil
-}
-
 // func ReadJSON(w http.ResponseWriter, r *http.Request, data any) error {
 // 	var maxBytes int64 = 1048576 // one megabyte
 

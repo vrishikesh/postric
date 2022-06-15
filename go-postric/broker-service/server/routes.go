@@ -2,6 +2,7 @@ package main
 
 import (
 	"broker/handlers"
+	"broker/util"
 	"context"
 	"fmt"
 	"log"
@@ -41,11 +42,11 @@ func (app *Config) routes() http.Handler {
 	// processing should be stopped.
 	r.Use(middleware.Timeout(30 * time.Second))
 
-	r.Get("/", handlers.Broker)
+	r.Get("/", util.RouteHandler(handlers.Home))
 
-	r.Get("/ping", handlers.Ping)
+	r.Get("/ping", util.RouteHandler(handlers.Ping))
 
-	r.Post("/handle", handlers.HandleSubmission)
+	r.Post("/handle", util.RouteHandler(handlers.HandleSubmission))
 
 	// API version 1
 	r.Mount("/v1", v1Router())
