@@ -28,9 +28,9 @@ var users = map[string]string{
 var jwtSecretKey = []byte("my_secret_key")
 
 func Signin(w http.ResponseWriter, r *http.Request) render.Renderer {
-	var creds Credentials
+	creds := new(Credentials)
 
-	err := json.NewDecoder(r.Body).Decode(&creds)
+	err := json.NewDecoder(r.Body).Decode(creds)
 	if err != nil {
 		return util.ErrBadRequest(err)
 	}
