@@ -21,7 +21,7 @@ func Welcome(w http.ResponseWriter, r *http.Request) render.Renderer {
 
 	tknStr := c.Value
 
-	claims := &Claims{}
+	claims := new(Claims)
 
 	tkn, err := jwt.ParseWithClaims(tknStr, claims, func(t *jwt.Token) (interface{}, error) {
 		return jwtSecretKey, nil
