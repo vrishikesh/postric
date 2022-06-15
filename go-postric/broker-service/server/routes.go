@@ -46,15 +46,15 @@ func (app *Config) routes() http.Handler {
 
 	r.Get("/ping", util.RouteHandler(handlers.Ping))
 
-	r.Post("/handle", util.RouteHandler(handlers.HandleSubmission))
+	r.HandleFunc("/*", util.RouteHandler(handlers.Handle))
 
 	// API version 1
-	r.Mount("/v1", v1Router())
+	// r.Mount("/v1", v1Router())
 
 	return r
 }
 
-func v1Router() chi.Router {
+func V1Router() chi.Router {
 	r := chi.NewRouter()
 	r.Use(setCtx("api.version", "v1"))
 
