@@ -53,19 +53,15 @@ func v1Router() chi.Router {
 	r := chi.NewRouter()
 	r.Use(setCtx("api.version", "v1"))
 
-	r.Mount("/", authRouter())
-
-	return r
-}
-
-func authRouter() chi.Router {
-	r := chi.NewRouter()
-
 	r.Post("/signin", util.RouteHandler(handlers.Signin))
 
-	r.Get("/welcome", util.RouteHandler(handlers.Welcome))
+	r.Group(func(r chi.Router) {
+		r.Use(handlers.AuthGuard())
 
-	r.Get("/refresh", util.RouteHandler(handlers.Refresh))
+		r.Get("/welcome", util.RouteHandler(handlers.Welcome))
+
+		r.Get("/refresh", util.RouteHandler(handlers.Refresh))
+	})
 
 	return r
 }

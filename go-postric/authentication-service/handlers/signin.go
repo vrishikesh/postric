@@ -32,12 +32,12 @@ func Signin(w http.ResponseWriter, r *http.Request) render.Renderer {
 
 	err := json.NewDecoder(r.Body).Decode(creds)
 	if err != nil {
-		return util.ErrBadRequest(err)
+		return util.ErrResponse(http.StatusBadRequest, err)
 	}
 
 	expectedPassword, ok := users[creds.Username]
 	if !ok || expectedPassword != creds.Password {
-		return util.ErrUnauthorized(err)
+		return util.ErrResponse(http.StatusUnauthorized, err)
 	}
 
 	expirationTime := time.Now().Add(5 * time.Minute)
@@ -51,15 +51,10 @@ func Signin(w http.ResponseWriter, r *http.Request) render.Renderer {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenString, err := token.SignedString(jwtSecretKey)
 	if err != nil {
-		return util.ErrInternalServer(err)
+		return util.ErrResponse(http.StatusInternalServerError, err)
 	}
 
-	http.SetCookie(w, &http.Cookie{
-		Name:    "token",
-		Value:   tokenString,
-		Expires: expirationTime,
-	})
-	return util.Response(struct {
+	return util.Response(http.StatusAccepted, struct {
 		Token string `json:"token"`
 	}{
 		Token: tokenString,

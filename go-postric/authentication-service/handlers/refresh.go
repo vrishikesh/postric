@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"authentication/util"
+	"errors"
 	"net/http"
 	"time"
 
@@ -10,33 +11,11 @@ import (
 )
 
 func Refresh(w http.ResponseWriter, r *http.Request) render.Renderer {
-	c, err := r.Cookie("token")
-	if err != nil {
-		if err == http.ErrNoCookie {
-			return util.ErrUnauthorized(err)
-		}
+	ctxKey := util.ContextKey("claims")
+	claims := r.Context().Value(ctxKey).(*Claims)
 
-		return util.ErrBadRequest(err)
-	}
-
-	tknStr := c.Value
-	claims := new(Claims)
-	tkn, err := jwt.ParseWithClaims(tknStr, claims, func(token *jwt.Token) (interface{}, error) {
-		return jwtSecretKey, nil
-	})
-	if err != nil {
-		if err == jwt.ErrSignatureInvalid {
-			return util.ErrUnauthorized(err)
-		}
-
-		return util.ErrBadRequest(err)
-	}
-	if !tkn.Valid {
-		return util.ErrUnauthorized(err)
-	}
-
-	if time.Unix(claims.ExpiresAt.Unix(), 0).Sub(time.Now()) > 30*time.Second {
-		return util.ErrBadRequest(err)
+	if time.Until(claims.ExpiresAt.Time) > 30*time.Second {
+		return util.ErrResponse(http.StatusBadRequest, errors.New("refresh too early"))
 	}
 
 	expirationTime := time.Now().Add(5 * time.Minute)
@@ -44,15 +23,10 @@ func Refresh(w http.ResponseWriter, r *http.Request) render.Renderer {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenString, err := token.SignedString(jwtSecretKey)
 	if err != nil {
-		return util.ErrInternalServer(err)
+		return util.ErrResponse(http.StatusInternalServerError, err)
 	}
 
-	http.SetCookie(w, &http.Cookie{
-		Name:    "token",
-		Value:   tokenString,
-		Expires: expirationTime,
-	})
-	return util.Response(struct {
+	return util.Response(http.StatusAccepted, struct {
 		Token string `json:"token"`
 	}{
 		Token: tokenString,

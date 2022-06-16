@@ -8,9 +8,9 @@ import (
 )
 
 func Home(w http.ResponseWriter, r *http.Request) render.Renderer {
-	return util.Response("Hit the auth")
+	return util.Response(http.StatusOK, "Hit the auth")
 }
 
 func Ping(w http.ResponseWriter, r *http.Request) render.Renderer {
-	return util.Response("pong")
+	return util.Response(http.StatusOK, "pong")
 }

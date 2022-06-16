@@ -26,6 +26,8 @@ func Ping(w http.ResponseWriter, r *http.Request) render.Renderer {
 }
 
 func Handle(w http.ResponseWriter, r *http.Request) render.Renderer {
+	log.Printf("Headers: %+v", r.Header)
+
 	// Get the service name
 	re := regexp.MustCompile(`(?i)\/[^\/]+`)
 	service := re.FindString(r.URL.String())
@@ -42,10 +44,10 @@ func Handle(w http.ResponseWriter, r *http.Request) render.Renderer {
 	path := strings.Replace(r.URL.String(), service, "", 1)
 	path = strings.Trim(path, "/")
 
-	return ForwardRequest(r.Method, service, path, rBody)
+	return ForwardRequest(r.Method, service, path, r.Header, rBody)
 }
 
-func ForwardRequest(method, service, path string, body ...[]byte) render.Renderer {
+func ForwardRequest(method, service, path string, headers http.Header, body ...[]byte) render.Renderer {
 	log.Printf("calling service: %s", fmt.Sprintf(templateUrl, service, path))
 
 	buffer := new(bytes.Buffer)
@@ -58,6 +60,7 @@ func ForwardRequest(method, service, path string, body ...[]byte) render.Rendere
 		fmt.Sprintf(templateUrl, service, path),
 		buffer,
 	)
+	request.Header.Add("Authorization", headers.Get("Authorization"))
 	if err != nil {
 		log.Printf("could not create new request: %v", err)
 		return util.ErrResponse(http.StatusBadRequest, err)
@@ -75,7 +78,7 @@ func ForwardRequest(method, service, path string, body ...[]byte) render.Rendere
 	err = json.NewDecoder(resp.Body).Decode(jsonFromService)
 	if err != nil {
 		log.Printf("could not parse json: %v", err)
-		return util.ErrResponse(http.StatusUnprocessableEntity, err)
+		return util.ErrResponse(resp.StatusCode, err)
 	}
 
 	if jsonFromService.Error {
