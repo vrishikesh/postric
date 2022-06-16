@@ -1,6 +1,8 @@
 package main
 
 import (
+	"authentication/models"
+
 	"context"
 	"log"
 	"net/http"
@@ -8,15 +10,24 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
 type Config struct {
-	DefaultTimeout time.Duration
+	DB     *gorm.DB
+	Models models.Models
 }
 
 func main() {
+	conn := connectToDB()
+
+	conn.AutoMigrate(&models.User{})
+
 	app := &Config{
-		DefaultTimeout: 30 * time.Second,
+		DB:     conn,
+		Models: models.New(conn),
 	}
 
 	// The HTTP Server
@@ -62,4 +73,30 @@ func main() {
 
 	// Wait for server context to be stopped
 	<-serverCtx.Done()
+}
+
+func connectToDB() *gorm.DB {
+	dsn := os.Getenv("DSN")
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	if err != nil {
+		log.Panicf("could not open connection to db: %v", err)
+		return nil
+	}
+
+	sqlDB, err := db.DB()
+	if err != nil {
+		log.Panicf("could not get db connection handle: %v", err)
+		return nil
+	}
+
+	// SetMaxIdleConns sets the maximum number of connections in the idle connection pool.
+	sqlDB.SetMaxIdleConns(10)
+
+	// SetMaxOpenConns sets the maximum number of open connections to the database.
+	sqlDB.SetMaxOpenConns(100)
+
+	// SetConnMaxLifetime sets the maximum amount of time a connection may be reused.
+	sqlDB.SetConnMaxLifetime(time.Hour)
+
+	return db
 }
